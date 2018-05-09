@@ -9,8 +9,8 @@ client = discord.Client()
 #             0     1     2     3     4     5     6     7     8     9    10    11    12    13    14    15    16    17    18    19    20    21    22    23    24    25    26    27    28    29    30    31    32    33    34    35    36    37    38
 job_list = ['ACR','ALC','ARC','ASN','BAR','BER','BLO','BUI','CIV','DAS','DEF','ENC','ENG','FAR','HAN','HEA','HUN','ICE','IMM','LUM','MAR','MIN','NIN','PYR','RIF','ROB','SCP','SCO','SNI','SPI','SPY','SUC','SWA','THO','TIN','TRA','VAM','WAR','WIZ']
 rank_list = [['UnRanked','UnRanked','UnRanked'],['Novice-Ⅰ','Novice-Ⅱ','Novice-Ⅲ'],['Silver-Ⅰ','Silver-Ⅱ','Silver-Ⅲ'],['Gold-Ⅰ','Gold-Ⅱ','Gold-Ⅲ'],['Master-Ⅰ','Master-Ⅱ','Master-Ⅲ'],['Grand Master-Ⅰ','Grand Master-Ⅱ','Grand Master-Ⅲ'],['Annihilator','Annihilator','Annihilator']]
-yes_list = ['はい','うん','そうだよ','大丈夫','yes','ok','ああ']
-ang_list = ['もー！ちゃんとしてよ！',':angry:']
+yes_list = []
+ang_list = []
 listnum = 0
 
 #ユーザデータを取得する関数,sで情報を指定。不正なときはNickNameを返す
@@ -50,10 +50,9 @@ def get_userdata(userid,s):
         return data
 
 
-#ユーザidから職画像を生成して保存する関数
-def create_pic(userid):
-    username = get_userdata(userid,'NickName')
-    joblist = get_userdata(userid,'job')
+#ユーザidから職画像を生成して保存する関数,xが1の時はもってない職画像を生成する
+def create_pic(userid,joblist):
+    MCID = get_userdata(userid,'MCID')
     #img読み込み
     imbase = Image.open('img\\job\\list_base.png')
     img = []
@@ -86,24 +85,31 @@ def create_pic(userid):
                 x = 10 + (36 * (count - 36))
                 y = 174
         num += 1
-    
     back_im.save('img\\userimg\\' + userid + '.png', quality=95)
-    print(username + "の職画像を保存しました")
+    print(MCID + "の職画像を保存しました")
         
 #ユーザidから解放済みの職をアルファベット3字で[,]を区切りとしてstringとして返す関数
-def get_jobs(userid):
+#xが1の時は未解放の職を返す
+def get_jobs(userid,x):
     joblist = get_userdata(userid,'job')
     count = 0
     s = ""
     for n in joblist:
-        if n == '1':
-            s += job_list[count] + ","
-        count += 1
+        if x == 1:
+            if n == '0':
+                s += job_list[count] + ","
+            count += 1
+        else:
+            if n == '1':
+                s += job_list[count] + ","
+            count += 1
     return s[:-1]
 
 @client.event
 async def on_ready():
     global listnum
+    global yes_list
+    global ang_list
     
     print('Logged in as')
     print(client.user.name)
@@ -113,6 +119,18 @@ async def on_ready():
     f = open( 'hatchandata\\listnum.txt', 'r')
     listnum = int(f.read())
     f.close()
+
+    f = open( 'hatchandata\\yes_list.txt', 'r')
+    txt = f.readlines()
+    f.close()
+    for y in txt:
+        yes_list.append(y[:-1])
+
+    f = open( 'hatchandata\\ang_list.txt', 'r')
+    txt = f.readlines()
+    f.close()
+    for y in txt:
+        ang_list.append(y[:-1])
 
 @client.event
 async def on_message(message):
@@ -210,10 +228,7 @@ async def on_message(message):
                         m = random.choice(ang_list)
                         await client.send_message(message.channel, m)
                         m = "Anniのランクを番号(半角数字)で教えて！"
-                m = "MCID ==> " + data[1]
-                m += "\nAnniRank ==>" + data[2]
-                m += "\nこれが" + data[0] + "の情報だね！"
-                await client.send_message(message.channel, m)
+                
                 jobs = ['0'] * 39
                 jobs[8] = '1'
                 for x in range(7):
@@ -221,67 +236,87 @@ async def on_message(message):
                         if data[2] == rank_list[x][y]:
                             if x >= 1:
                                 jobs[21] = '1'
-                            if(x >= 1)and(y >= 1):
+                            if((x == 1)and(y >= 1))or(x >= 2):
                                 jobs[2] = '1'
                             if x >= 2:
                                 jobs[37] = '1'
-                            if(x >= 2)and(y >= 1):
+                            if((x == 2)and(y >= 1))or(x >= 3):
                                 jobs[1] = '1'
-                            if(x >= 2)and(y >= 2):
+                            if((x == 2)and(y >= 2))or(x >= 3):
                                 jobs[15] = '1'
                             if x >= 3:
                                 jobs[20] = '1'
-                            if(x >= 3)and(y >= 2):
+                            if((x == 3)and(y >= 2))or(x >= 4):
                                 jobs[14] = '1'
                             if x >= 4:
-                                jobs[26] = '1'
+                                jobs[27] = '1'
+                            break
+
                 job = ','.join(jobs)
-                
                 data.append(job)
                 data.append(str(listnum))
                 listnum += 1
                 f = open( 'hatchandata\\listnum.txt', 'w')
                 f.write(str(listnum))
                 f.close()
+
                 a = '\n'.join(data) + "\n"
                 f = open( 'saves\\' + message.author.id + '.txt', 'w')
                 f.write(a)
                 f.close()
-                m = "うん！覚えたよ！！"
+
+                m = "じゃあ最後に持ってる職を教えてもらおうかな。"
+                await client.send_message(message.channel, m)
+                count = 0
+                while True:
+                    s = ""
+                    num = 0
+                    for n in jobs:
+                        if n == '0':
+                            s += job_list[num] + ","
+                        num += 1
+                    s = s[:-1]
+                    m = s + "\nこの中から持ってる職を教えてね！"
+                    await client.send_message(message.channel, m)
+                    nojobs = s.split(',')
+                    message = await client.wait_for_message(author=message.author, check=check)
+                    num = 0
+                    s = ","
+                    for x in job_list:
+                        if x in message.content.strip():
+                            if (x in nojobs) == True:
+                                jobs[num] = '1'
+                                s += job_list[num]
+                        num += 1
+                    m = "りょーかい！"
+                    await client.send_message(message.channel, m)
+                    create_pic(message.author.id, jobs)
+                    m = "ということは持ってる職は\n"
+                    m += get_jobs(message.author.id, 0)
+                    m += s[:-1]
+                    m += "\nこんな感じで、画像にするとこうなるのかな?"
+                    if count == 1:
+                        m += "\n良かったら[はい]って言ってほしいな"
+                    await client.send_message(message.channel, m)
+                    await client.send_file(message.channel,'img\\userimg\\' + message.author.id + '.png')
+                    message = await client.wait_for_message(author=message.author, check=check)
+                    if (str(message.content.strip()) in yes_list) == True:
+                        data = get_userdata(message.author.id, 'ALL')
+                        data[3] = ','.join(jobs)
+                        a = '\n'.join(data) + "\n"
+                        f = open( 'saves\\' + message.author.id + '.txt', 'w')
+                        f.write(a)
+                        f.close()
+                        break
+                    else:
+                        m = "えっと、じゃあもっかい聞くよ。"
+                        await client.send_message(message.channel, m)
+                        count == 1
+                
+                m = "うん！" + data[0] + "のこと覚えたよ！！"
                 await client.send_message(message.channel, m)
                 m = "後は #rule で使い方を確認してね"
                 await client.send_message(message.channel, m)
-                m = "購入済みの職業登録も忘れずにね！！"
-                await client.send_message(message.channel, m)
-
-
-    elif message.content.startswith('!img'):
-        if client.user != message.author:
-            if Flag == 0:
-                m = "初めまして！" + message.author.name + "さん！\n"
-                m += "まずは[!register]コマンドであなたのことを教えてね！"
-                await client.send_message(message.channel, m)
-            else:
-                nickname = get_userdata(message.author.id, 'NickName')
-
-                m = "職の画像を作るの?"
-                await client.send_message(message.channel, m)
-                m = "今" + nickname + "がもってる職は\n"
-                m += get_jobs(message.author.id)
-                m += "\nだって覚えてるけど、これで作っちゃって大丈夫?"
-                await client.send_message(message.channel, m)
-                message = await client.wait_for_message(author=message.author, check=check)
-                if (str(message.content.strip()) in yes_list) == True:
-                    m = "おっけー！じゃあちょっと待ってて！"
-                    await client.send_message(message.channel, m)
-                    create_pic(message.author.id)
-                    m = "はい！できました！！"
-                    await client.send_message(message.channel, m)
-                    await client.send_file(message.channel,'img\\userimg\\' + message.author.id + '.png')
-                else:
-                    m = "おっけー！ちゃんと持ってる職を教えてからまた教えて！"
-                    await client.send_message(message.channel, m)
-
 
     elif message.content.startswith('!job'):
         if client.user != message.author:
@@ -289,7 +324,93 @@ async def on_message(message):
                 m = "初めまして！" + message.author.name + "さん！\n"
                 m += "まずは[!register]コマンドであなたのことを教えてね！"
                 await client.send_message(message.channel, m)
-            else:                
-                m = ""
+            else:
+                nickname = get_userdata(message.author.id, 'NickName')
+                num = 0
+                nojobs = get_jobs(message.author.id,1)
+                m = "職の更新だね！" + nickname + "がまだ持ってなかった職は…\n"
+                m += nojobs
+                m += "  だから、\n"
+                count = 0
+                while True:
+                    jobs = get_userdata(message.author.id,'job')
+                    s = ","
+                    m += "どれを新しく買ったの?"
+                    await client.send_message(message.channel, m)
+                    nojoblist = nojobs.split(',')
+                    message = await client.wait_for_message(author=message.author, check=check)
+                    num = 0
+                    for x in job_list:
+                        if x in message.content.strip():
+                            if (x in nojoblist) == True:
+                                jobs[num] = '1'
+                                s += job_list[num] + ","
+                        num += 1
+                    m = "りょーかい！"
+                    await client.send_message(message.channel, m)
+                    create_pic(message.author.id, jobs)
+                    m = "ということは持ってる職はこんな感じで、\n"
+                    m += get_jobs(message.author.id, 0)
+                    m += s[:-1]
+                    m += "\n画像にするとこうなるのかな?"
+                    if count == 1:
+                        m += "\n良かったら[はい]って言ってほしいな"
+                    await client.send_message(message.channel, m)
+                    await client.send_file(message.channel,'img\\userimg\\' + message.author.id + '.png')
+                    message = await client.wait_for_message(author=message.author, check=check)
+                    if (str(message.content.strip()) in yes_list) == True:
+                        m = "おっけー！覚え直しておくね。"
+                        await client.send_message(message.channel, m)
+                        data = get_userdata(message.author.id, 'ALL')
+                        data[3] = ','.join(jobs)
+                        a = '\n'.join(data) + "\n"
+                        f = open( 'saves\\' + message.author.id + '.txt', 'w')
+                        f.write(a)
+                        f.close()
+                        break
+                    else:
+                        m = "えっと、じゃあもっかい聞くよ。\n"
+                        count = 1
+
+    elif message.content.startswith('!remove'):
+        if client.user != message.author:
+            if Flag == 0:
+                m = "初めまして！" + message.author.name + "さん！\n"
+                m += "まずは[!register]コマンドであなたのことを教えてね！"
+                await client.send_message(message.channel, m)
+            else:
+                nickname = get_userdata(message.author.id, 'NickName')
+                data = get_userdata(message.author.id, 'ALL')
+                count = 0
+                num = 0
+                s = ""
+                jobs = get_userdata(message.author.id,'job')
+                job = get_jobs(message.author.id,0)
+                joblist = job.split(',')
+                for x in job_list:
+                    if x in message.content:
+                        if (x in joblist) == True:
+                            jobs[num] = '0'
+                            s += job_list[num] + ","
+                            count = 1
+                    num += 1
+                if count == 0:
+                    m = "よくわかんないけどこのままでよさそうだね！"
+                    await client.send_message(message.channel, m)
+                else:
+                    m = nickname + "は [" + s[:-1] + "] を持ってなかったんだね！\n覚え直しておくよ。"
+                    await client.send_message(message.channel, m)
+                    data[3] = ','.join(jobs)
+                    a = '\n'.join(data) + "\n"
+                    f = open( 'saves\\' + message.author.id + '.txt', 'w')
+                    f.write(a)
+                    f.close()
+                    
+                    
+    elif message.content.startswith('!w'):
+        if client.user != message.author:
+            channel = [channel for channel in client.get_all_channels() if channel.id == '419781408337166346'][0]
+            m = "...笑"
+            await client.send_message(channel, m)
                 
 client.run("NDQyNjM0NjMyNzQ0MjcxODcy.DdCs2A.2mzJJI3CApn-btM6Xbz5spAycMo")
