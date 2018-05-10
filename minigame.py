@@ -34,7 +34,7 @@ async def on_message(message):
 
                 draw = '引き分けだよ!'
                 win = 'あなたの勝ちだよ!'
-                lose = 'やったぁ!'
+                lose = 'やったぁ!勝った!'
 
                 if user_choice == bot:
                     judge = draw
@@ -57,7 +57,7 @@ async def on_message(message):
                         else:
                             judge = lose
 
-                m = "あなたが選んだのは" + user_choice + "\nbotが選んだのは" + bot + "\n結果は" + judge
+                m = "あなたが選んだのは" + user_choice + "\nbotが選んだのは" + bot + "\n" + judge
                 await client.send_message(message.channel, m)
 
             except:
