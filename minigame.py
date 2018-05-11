@@ -23,10 +23,17 @@ async def on_message(message):
     if message.content.startswith("じゃんけん"):
         if client.user != message.author:
             while True:
-                m = "出す手を✊か✌か🖐から選んでください"
+                m = "出す手を✊か✌か🖐から選んでね"
                 await client.send_message(message.channel, m)
                 message = await client.wait_for_message(author=message.author, check=check)
                 user = message.content.strip()
+                if user == "じゃんけん":
+                    m = "ちゃんとしてよ!"
+                    await client.send_message(message.channel, m)
+                    break
+                else:
+                    pass
+
 
                 try:
                     user_choice = dic[user]
@@ -34,9 +41,9 @@ async def on_message(message):
                     choice_list = ["✊", "✌", "🖐"]
                     bot = dic[random.choice(choice_list)]
 
-                    draw = "引き分けですね"
-                    win = message.author.name + "さんの勝ちです"
-                    lose = "私の勝ちですね"
+                    draw = "引き分けだよ!"
+                    win = message.author.name + "さんの勝ちだよ!"
+                    lose = "やったぁ!勝った!"
 
                     if user_choice == bot:
                         judge = draw
@@ -59,12 +66,12 @@ async def on_message(message):
                             else:
                                 judge = lose
 
-                    m = "あなたが選んだのは" + user_choice + "\n私が選んだのは" + bot + "\n" + judge
+                    m = message.author.name + "さんが選んだのは" + user_choice + "\n私が選んだのは" + bot + "\n" + judge
                     await client.send_message(message.channel, m)
                     break
 
                 except:
-                    m = "✊か✌か🖐を入力してね!"
+                    m = "ちゃんと選んでよ!"
                     await client.send_message(message.channel, m)
 
-client.run("NDQyNTg0MjI0NzU1ODc1ODQw.DdA8NA.vvtik-pKLr24fnHMlrwfVCTHau4")
+client.run("token")
