@@ -2,6 +2,7 @@ import discord
 import os
 import random
 import sys
+import copy
 from PIL import Image, ImageDraw, ImageFilter
 
 client = discord.Client()
@@ -128,7 +129,36 @@ def set_userdata(userid, s, setdata):
     f.write(a)
     f.close()
 
-
+#全ユーザのMCIDを全ての情報と紐付けて取り出し、MCIDに一致した場合に全ての情報をリストで返す.不一致はFalse
+def get_seluserdata(authorid,selMCID):
+    f = open( 'hatchandata\\userid.txt', 'r')
+    txt = f.readlines()
+    f.close()
+    ALLuserMCID = []
+    ALLuserdata = []
+    for x in txt:
+        ALLuserMCID.append(get_userdata(x[:-1],'MCID'))
+        y = get_userdata(x[:-1],'ALL')
+        y.append(x[:-1])
+        ALLuserdata.append(y)
+    num = 0
+    for x in ALLuserMCID:
+        if x in selMCID:
+            return ALLuserdata[num]
+        num += 1
+    y = get_userdata(authorid,'ALL')
+    y.append(authorid)
+    return y
+        
+    
+#ユーザの発言内容にyes_listの内容が含まれているかどうかを判定する関数
+def is_yes(content):
+    global yes_list
+    for y in yes_list:
+        if (y in content):
+            return True
+    return False
+    
 @client.event
 async def on_ready():
     global listnum
@@ -196,7 +226,7 @@ async def on_message(message):
                             m += "\n良かったら[はい]って言ってほしいな"
                         await client.send_message(message.channel, m)
                         message = await client.wait_for_message(author=message.author, check=check)
-                        if (str(message.content.strip()) in yes_list) == True:
+                        if is_yes(message.content.strip()) == True:
                             break
                         count = 1
                     data.append(nickname)
@@ -213,7 +243,7 @@ async def on_message(message):
                             m += "\n良かったら[はい]って言ってほしいな"
                         await client.send_message(message.channel, m)
                         message = await client.wait_for_message(author=message.author, check=check)
-                        if (str(message.content.strip()) in yes_list) == True:
+                        if is_yes(message.content.strip()) == True:
                             break
                         count = 1
                     data.append(mcid)
@@ -304,6 +334,7 @@ async def on_message(message):
                     m = "じゃあ最後に持ってる職を教えてもらおうかな。"
                     await client.send_message(message.channel, m)
                     count = 0
+                    jobs_a = copy.deepcopy(jobs)
                     while True:
                         s = ""
                         num = 0
@@ -311,8 +342,7 @@ async def on_message(message):
                             if n == '0':
                                 s += job_list[num] + ","
                             num += 1
-                        s = s[:-1]
-                        m = s + "\nこの中から持ってる職を教えてね！"
+                        m = s[:-1] + "\nこの中から持ってる職を教えてね！"
                         await client.send_message(message.channel, m)
                         nojobs = s.split(',')
                         message = await client.wait_for_message(author=message.author, check=check)
@@ -336,18 +366,15 @@ async def on_message(message):
                         await client.send_message(message.channel, m)
                         await client.send_file(message.channel,'img\\userimg\\' + message.author.id + '.png')
                         message = await client.wait_for_message(author=message.author, check=check)
-                        if (str(message.content.strip()) in yes_list) == True:
-                            data = get_userdata(message.author.id, 'ALL')
-                            data[3] = ','.join(jobs)
-                            a = '\n'.join(data) + "\n"
-                            f = open( 'saves\\' + message.author.id + '.txt', 'w')
-                            f.write(a)
-                            f.close()
+                        if is_yes(message.content.strip()) == True:
+                            setdata = ','.join(jobs)
+                            set_userdata(message.author.id, 'job', setdata)
                             break
                         else:
                             m = "えっと、じゃあもっかい聞くよ。"
                             await client.send_message(message.channel, m)
                             count == 1
+                            jobs = copy.deepcopy(jobs_a)
                     
                     m = "うん！" + data[0] + "のこと覚えたよ！！"
                     await client.send_message(message.channel, m)
@@ -361,7 +388,6 @@ async def on_message(message):
                     m += "まずは[!register]コマンドであなたのことを教えてね！"
                     await client.send_message(message.channel, m)
                 else:
-                    nickname = get_userdata(message.author.id, 'NickName')
                     num = 0
                     nojobs = get_jobs(message.author.id,1)
                     m = "職の更新だね！" + nickname + "がまだ持ってなかった職は…\n"
@@ -393,15 +419,11 @@ async def on_message(message):
                         await client.send_message(message.channel, m)
                         await client.send_file(message.channel,'img\\userimg\\' + message.author.id + '.png')
                         message = await client.wait_for_message(author=message.author, check=check)
-                        if (str(message.content.strip()) in yes_list) == True:
+                        if is_yes(message.content.strip()) == True:
                             m = "おっけー！覚え直しておくね。"
                             await client.send_message(message.channel, m)
-                            data = get_userdata(message.author.id, 'ALL')
-                            data[3] = ','.join(jobs)
-                            a = '\n'.join(data) + "\n"
-                            f = open( 'saves\\' + message.author.id + '.txt', 'w')
-                            f.write(a)
-                            f.close()
+                            setdata = ','.join(jobs)
+                            set_userdata(message.author.id, 'job', setdata)
                             break
                         else:
                             m = "えっと、じゃあもっかい聞くよ。\n"
@@ -417,7 +439,6 @@ async def on_message(message):
                     count = 0
                     num = 0
                     s = ""
-                    jobs = get_userdata(message.author.id,'job')
                     job = get_jobs(message.author.id,0)
                     joblist = job.split(',')
                     for x in job_list:
@@ -435,6 +456,7 @@ async def on_message(message):
                         await client.send_message(message.channel, m)
                         setdata = ','.join(jobs)
                         set_userdata(message.author.id, 'job', setdata)
+                        create_pic(message.author.id, jobs)
 
         elif message.content.startswith('!nickname'):
             if client.user != message.author:
@@ -447,7 +469,7 @@ async def on_message(message):
                     m = "これからは" + nickname + "のことを" + newnickname + "って呼べばいいのかな?"
                     await client.send_message(message.channel, m)
                     message = await client.wait_for_message(author=message.author, check=check)
-                    if (str(message.content.strip()) in yes_list) == True:
+                    if is_yes(message.content.strip()) == True:
                         m = "おっけー！" + newnickname + "！これからもよろしく！！"
                         set_userdata(message.author.id, "NickName", newnickname)
                     else:
@@ -465,7 +487,7 @@ async def on_message(message):
                     m = "MCIDを[" + MCID + "]から[" + newMCID + "]に変えたの?"
                     await client.send_message(message.channel, m)
                     message = await client.wait_for_message(author=message.author, check=check)
-                    if (str(message.content.strip()) in yes_list) == True:
+                    if is_yes(message.content.strip()) == True:
                         m = "おっけー！[" + newMCID + "]で覚え直しておくね！！"
                         set_userdata(message.author.id, "MCID", newMCID)
                     else:
@@ -479,11 +501,11 @@ async def on_message(message):
                     m += "まずは[!register]コマンドであなたのことを教えてね！"
                     await client.send_message(message.channel, m)
                 else:
-                    if int(Rank) <= 16:
+                    if int(Rank) <= 15:
                         m = "Anniのランク上がったの?"
                         await client.send_message(message.channel, m)
                         message = await client.wait_for_message(author=message.author, check=check)
-                        if (str(message.content.strip()) in yes_list) == True:
+                        if is_yes(message.content.strip()) == True:
                             newRank = int(Rank)+1
                             m = "おめでと！\n" + rank_list[int(Rank)] + "から" + rank_list[newRank] + "になったんだね！"
                             set_userdata(message.author.id, "rank", str(newRank))
@@ -522,13 +544,82 @@ async def on_message(message):
                         else:
                             m = "ふーん..."
                         await client.send_message(message.channel, m)
-                            
+                    else:
+                        m = nickname + "はもうAnnihilatorだから上がらないでしょ！:angry:"
+                        await client.send_message(message.channel, m)
                             
                         
-        elif message.content.startswith('!w'):
+        elif message.content.startswith('!show'):
             if client.user != message.author:
-                channel = [channel for channel in client.get_all_channels() if channel.id == '419781408337166346'][0]
-                m = "...笑"
-                await client.send_message(channel, m)
-                
-client.run("NDQyNjM0NjMyNzQ0MjcxODcy.DdCs2A.2mzJJI3CApn-btM6Xbz5spAycMo")
+                if Flag == 0:
+                    m = "初めまして！" + message.author.name + "さん！\n"
+                    m += "まずは[!register]コマンドであなたのことを教えてね！"
+                    await client.send_message(message.channel, m)
+                else:
+                    selMCID = message.content[6:]
+                    seldata = get_seluserdata(message.author.id, selMCID)
+                    m = "MCID:[" + seldata[1] + "]の情報をカイジするよ！\n\n"
+                    m += "AnniRank:[" + rank_list[int(seldata[2])] + "]\n持ってる職は ["
+                    jobs = seldata[3].split(',')
+                    count = 0
+                    for x in jobs:
+                        if x == '1':
+                            m += job_list[count] + ','
+                        count += 1
+                    m = m[:-1] + "]で画像にするとこうだよ！"
+                    await client.send_message(message.channel, m)
+                    await client.send_file(message.channel,'img\\userimg\\' + seldata[6] + '.png')
+
+        elif message.content.startswith('!search'):
+            if client.user != message.author:
+                if Flag == 0:
+                    m = "初めまして！" + message.author.name + "さん！\n"
+                    m += "まずは[!register]コマンドであなたのことを教えてね！"
+                    await client.send_message(message.channel, m)
+                else:
+                    f = open( 'hatchandata\\userid.txt', 'r')
+                    txt = f.readlines()
+                    f.close()
+                    ALLuserMCID = []
+                    ALLuserdata = []
+                    Flag = 0
+                    hasusers = ""
+                    seljob = ""
+                    for x in txt:
+                        ALLuserMCID.append(get_userdata(x[:-1],'MCID'))
+                        ALLuserdata.append(get_userdata(x[:-1],'job'))
+                    num = 0
+                    for x in job_list:
+                        if x not in message.content:
+                            Flag += 1
+                        else:
+                            seljob += x + ','
+                            count = 0
+                            for n in ALLuserdata:                                
+                                if n[num] == '0':
+                                    ALLuserMCID[count] = "§exception"
+                                count += 1
+                        num += 1
+                    if Flag <= 38:
+                        m = seljob[:-1] + "を持ってる人は…\n"
+                        for a in ALLuserMCID:
+                            if a != "§exception":
+                                hasusers += a + ','
+                        if hasusers == "":
+                            m += "いないみたいだね…"
+                        else:
+                            m += hasusers[:-1] + " だよ！"
+                    else:
+                        m = "それは存在しない職だよ"
+
+                    await client.send_message(message.channel, m)
+                    
+                    
+        elif message.content.startswith('!教育'):
+            if ("エンジニア" in [y.name.lower() for y in message.author.roles])or("幹部" in [y.name.lower() for y in message.author.roles]):
+                m = "未実装ナリよ"
+                await client.send_message(message.channel, m)
+            else:
+                m = "このコマンドを使う権限がないみたいだよ"
+                await client.send_message(message.channel, m)
+client.run("Bot's Token")
