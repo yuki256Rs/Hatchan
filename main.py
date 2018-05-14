@@ -8,7 +8,7 @@ from PIL import Image, ImageDraw, ImageFilter
 client = discord.Client()
 
 #             0     1     2     3     4     5     6     7     8     9    10    11    12    13    14    15    16    17    18    19    20    21    22    23    24    25    26    27    28    29    30    31    32    33    34    35    36    37    38
-job_list = ['ACR','ALC','ARC','ASN','BAR','BER','BLO','BUI','CIV','DAS','DEF','ENC','ENG','FAR','HAN','HEA','HUN','ICE','IMM','LUM','MAR','MIN','NIN','PYR','RIF','ROB','SCP','SCO','SNI','SPI','SPY','SUC','SWA','THO','TIN','TRA','VAM','WAR','WIZ']
+job_list = ['ACR','ALC','ARC','ASN','BAR','BER','BLO','BUI','CIV','DAS','DEF','ENC','ENG','FAR','HAN','HEA','HUN','ICE','IMM','LUM','MER','MIN','NIN','PYR','RIF','ROB','SCP','SCO','SNI','SPI','SPY','SUC','SWA','THO','TIN','TRA','VAM','WAR','WIZ']
 rank_list = ['UnRanked','Novice-Ⅰ','Novice-Ⅱ','Novice-Ⅲ','Silver-Ⅰ','Silver-Ⅱ','Silver-Ⅲ','Gold-Ⅰ','Gold-Ⅱ','Gold-Ⅲ','Master-Ⅰ','Master-Ⅱ','Master-Ⅲ','Grand Master-Ⅰ','Grand Master-Ⅱ','Grand Master-Ⅲ','Annihilator']
 yes_list = []
 ang_list = []
@@ -300,7 +300,7 @@ async def on_message(message):
                         jobs[21] = '1'
                     if n >= 2:
                         jobs[2] = '1'
-                    if n >= 3:
+                    if n >= 4:
                         jobs[37] = '1'
                     if n >= 5:
                         jobs[1] = '1'
@@ -516,7 +516,7 @@ async def on_message(message):
                             elif newRank == 2:
                                 jobs[2] = '1'
                                 s = job_list[2]
-                            elif newRank == 3:
+                            elif newRank == 4:
                                 jobs[37] = '1'
                                 s = job_list[37]
                             elif newRank == 5:
@@ -583,7 +583,7 @@ async def on_message(message):
                     ALLuserMCID = []
                     ALLuserdata = []
                     Flag = 0
-                    hasusers = ""
+                    hasusers = []
                     seljob = ""
                     for x in txt:
                         ALLuserMCID.append(get_userdata(x[:-1],'MCID'))
@@ -604,11 +604,12 @@ async def on_message(message):
                         m = seljob[:-1] + "を持ってる人は…\n"
                         for a in ALLuserMCID:
                             if a != "§exception":
-                                hasusers += a + ','
+                                hasusers.append(a)
+                        hasusers.sort()
                         if hasusers == "":
                             m += "いないみたいだね…"
                         else:
-                            m += hasusers[:-1] + " だよ！"
+                            m += "```\n" + '\n'.join(hasusers) + "```\nだよ！"
                     else:
                         m = "それは存在しない職だよ"
 
@@ -622,4 +623,4 @@ async def on_message(message):
             else:
                 m = "このコマンドを使う権限がないみたいだよ"
                 await client.send_message(message.channel, m)
-client.run("Bot's Token")
+client.run("NDQyNjM0NjMyNzQ0MjcxODcy.DdCs2A.2mzJJI3CApn-btM6Xbz5spAycMo")
