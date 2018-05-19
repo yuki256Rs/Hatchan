@@ -623,4 +623,18 @@ async def on_message(message):
             else:
                 m = "このコマンドを使う権限がないみたいだよ"
                 await client.send_message(message.channel, m)
+
+        elif message.content.startswith('!map'):
+            if client.user != message.author:
+                map = message.content[5:]
+                await client.send_file(message.channel,'img\\maps\\' + map + '.png')
+
+@client.event
+async def on_member_join(member):
+    server = member.server
+    channel = [channel for channel in client.get_all_channels()
+    if channel.id == '419780533011087371'][0]
+    m = "#LBGへようこそ! " + member.mention + " 設定をするから[!register]って打ってね！"
+    await client.send_message(channel, m)
+
 client.run("NDQyNjM0NjMyNzQ0MjcxODcy.DdCs2A.2mzJJI3CApn-btM6Xbz5spAycMo")
