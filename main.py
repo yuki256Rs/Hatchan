@@ -188,6 +188,19 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
+    if ( "未来" in message.content.strip()):
+        n = random.randint(1,5)
+        if n == 1:
+            m = ("<@!" + message.author.id + ">\n唐突の元カノ")
+            await client.send_message(message.channel, m)
+            m = ("<@!240287190750330890> \nあっ墓穴掘った")
+            await client.send_message(message.channel, m)
+
+            n = random.randint(1,5)
+            if n == 1:
+                m = ("<@!223771827657375754> \nところで彼女出来た?")
+                await client.send_message(message.channel, m)
+
     if message.content.startswith('!'):
         global listnum
         def check(msg):
@@ -618,8 +631,65 @@ async def on_message(message):
                     
         elif message.content.startswith('!教育'):
             if ("エンジニア" in [y.name.lower() for y in message.author.roles])or("幹部" in [y.name.lower() for y in message.author.roles]):
-                m = "未実装ナリよ"
-                await client.send_message(message.channel, m)
+                if(message.channel.id == '442950419434700810'):
+                    m = "yes_listの中身を変更します。操作中別のチャットを行わないでください。"
+                    await client.send_message(message.channel, m)
+                    
+                    m = ""
+                    
+                    global yes_list
+                    for n in yes_list:
+                        m += n + "\n"
+                        
+                    msg = discord.Embed(title='現在のlistの中身', description= m, colour=0x3498db)
+                    await client.send_message(message.channel, embed=msg)
+                    
+                    m = "追加 => 1\n削除 => 2"
+                    await client.send_message(message.channel, m)
+                    message = await client.wait_for_message(author=message.author, check=check)
+                    if message.content.strip() == '1':
+                        m = "yes_listに追加する単語を入力してください"
+                        await client.send_message(message.channel, m)
+                        message = await client.wait_for_message(author=message.author, check=check)
+                        #既にあるものだったら除外
+                        if is_yes(message.content.strip()) == True:
+                            m = "その単語は既にyes_listに登録されています。"
+                            await client.send_message(message.channel, m)
+                        else:
+                            f = open( 'hatchandata\\yes_list.txt', 'a')
+                            f.write(message.content.strip()+ "\n")
+                            f.close()
+                            m = "単語:" + message.content.strip() + " をyes_listに追加しました"
+                            await client.send_message(message.channel, m)
+                            yes_list.append(message.content.strip())
+
+                    elif message.content.strip() == '2':
+                        m = "yes_listから削除する単語を入力してください"
+                        await client.send_message(message.channel, m)
+                        message = await client.wait_for_message(author=message.author, check=check)
+                        #無いものだったら除外
+                        if is_yes(message.content.strip()) == False:
+                            m = "その単語はyes_listに登録されていません。"
+                            await client.send_message(message.channel, m)
+                        else:
+                            f = open( 'hatchandata\\yes_list.txt', 'w+')
+                            txt = f.readlines()
+                            n = []
+                            for s in txt:
+                                if (s[:-1] != message.content.strip()):
+                                    n.append(s)
+                            f.writelines(n)
+                            yes_list = []
+                            for y in n:
+                                yes_list.append(y[:-1])
+                            m = "単語:" + message.content.strip() + " をyes_listから削除しました"
+                            await client.send_message(message.channel, m)
+                    else:
+                        m = "入力が不正です。終了します。"
+                        await client.send_message(message.channel, m)
+                else:
+                    m = "そのコマンドはこのチャンネルじゃ使えないよ！"
+                    await client.send_message(message.channel, m)
             else:
                 m = "このコマンドを使う権限がないみたいだよ"
                 await client.send_message(message.channel, m)
